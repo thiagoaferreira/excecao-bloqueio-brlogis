@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  excecao-web:
+    build: .
+    container_name: excecao-bloqueio-brlogis
+    ports:
+      - "3001:80"
+    restart: always
+    environment:
+      - TZ=America/Sao_Paulo
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.excecao.rule=Host(`excecao.brlogis.com.br`)"
+      - "traefik.http.services.excecao.loadbalancer.server.port=80"
+    networks:
+      - brlogis-network
+
+networks:
+  brlogis-network:
+    external: true
