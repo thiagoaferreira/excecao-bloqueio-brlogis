@@ -404,12 +404,14 @@
                         document.getElementById('nomeMotorista').textContent = data.nome_motorista || 'Não informado';
                         document.getElementById('placaVeiculo').textContent = data.placa || 'Não informado';
                         document.getElementById('dataBloqueio').textContent = data.databloqueio || data.databloqueiio || 'Não informado';
-                        document.getElementById('motivoBloqueio').innerHTML = `⚠️ ${data.motivobloqueio || data.descricao_bloqueio || 'Teste de bloqueio por excesso de condução'}`;
+                        // Mostra o motivo do bloqueio no card amarelo
+                        const motivoDiv = document.getElementById('motivoBloqueio');
+                        motivoDiv.innerHTML = `⚠️ ${data.motivobloqueio || data.descricao_bloqueio || 'Teste de bloqueio por excesso de condução'}`;
+                        motivoDiv.style.display = 'block'; // Garante que está visível
                         
                         // Remove mensagem de erro se tudo ok
                         const errorDiv = document.getElementById('motivoBloqueio');
                         if (data.nome_motorista) {
-                            errorDiv.style.display = 'none';
                         }
                     } else {
                         throw new Error('Erro ao carregar dados');
