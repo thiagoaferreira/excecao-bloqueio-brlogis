@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autorização de Exceção - BR Logis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2b3184 0%, #1a1f52 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: #2b3184;
+            color: #ffffff;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 200px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .alert-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-left: 4px solid #2b3184;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #2b3184;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .bloqueio-motivo {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2b3184;
+            box-shadow: 0 0 0 3px rgba(43, 49, 132, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: #2b3184;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #1a1f52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(43, 49, 132, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2b3184;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message,
+        .error-message {
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .success-message.active,
+        .error-message.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .logo {
+                width: 150px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://fiqppzzltfeuvfhhybey.supabase.co/storage/v1/object/sign/brlogis-bucket/Sem%20nome%20(512%20x%20249%20px)Branco.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xYTlmZjdhNy1kMDNiLTRkYzItOTdjZi1hZDhjMGQ3ZmM4MmIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJicmxvZ2lzLWJ1Y2tldC9TZW0gbm9tZSAoNTEyIHggMjQ5IHB4KUJyYW5jby5wbmciLCJpYXQiOjE3NjMwNjQ5NzMsImV4cCI6MjA3ODQyNDk3M30.ivDYFvqCKHEBIqWFd85oR_C53iYvcS43dwn2MiY6CZ8" alt="BR Logis" class="logo">
+            <div class="alert-icon">🚨</div>
+            <h1>Autorização de Exceção</h1>
+            <p>Sistema de Gestão de Frota</p>
+        </div>
+
+        <div class="content">
+            <div id="successMessage" class="success-message">
+                ✅ Autorização concedida com sucesso!
+            </div>
+            
+            <div id="errorMessage" class="error-message">
+                ❌ Erro ao processar autorização. Tente novamente.
+            </div>
+
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Motorista:</span>
+                    <span class="info-value" id="nomeMotorista">Carregando...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Placa:</span>
+                    <span class="info-value" id="placaVeiculo">Carregando...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Data/Hora:</span>
+                    <span class="info-value" id="dataBloqueio">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="bloqueio-motivo" id="motivoBloqueio">
+                ⚠️ Carregando motivo do bloqueio...
+            </div>
+
+            <form id="autorizacaoForm">
+                <div class="form-group">
+                    <label for="nomeAutorizador" class="required">Seu Nome Completo</label>
+                    <input 
+                        type="text" 
+                        id="nomeAutorizador" 
+                        name="nomeAutorizador" 
+                        required 
+                        placeholder="Digite seu nome completo"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="cargoAutorizador">Cargo (opcional)</label>
+                    <input 
+                        type="text" 
+                        id="cargoAutorizador" 
+                        name="cargoAutorizador"
+                        placeholder="Ex: Supervisor de Operações"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="motivoAutorizacao" class="required">Motivo da Liberação</label>
+                    <textarea 
+                        id="motivoAutorizacao" 
+                        name="motivoAutorizacao" 
+                        required
+                        placeholder="Descreva o motivo para liberar esta exceção..."
+                    ></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="cancelar()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btnAutorizar">
+                        Autorizar Exceção
+                    </button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processando autorização...</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 BR Logis - Sistema de Gestão de Frota</p>
+            <p>Este link é único e intransferível</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuração da API - AJUSTAR PARA PRODUÇÃO
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : 'https://n8n.brlogis.com.br/webhook';
+
+        // Extrai o token da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token') || window.location.pathname.split('/').pop();
+
+        // Dados mockados para teste (remover em produção)
+        const mockData = {
+            nomeMotorista: 'João Silva',
+            placa: 'ABC-1234',
+            dataBloqueio: new Date().toLocaleString('pt-BR'),
+            motivoBloqueio: 'Excesso de 5h30 de condução sem pausa',
+            tipoBloqueo: 'conducao_5h30'
+        };
+
+        // Carrega dados da exceção
+        async function carregarDadosExcecao() {
+            try {
+                // Em produção, fazer chamada real à API
+                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    const response = await fetch(`${API_BASE_URL}/dados-excecao?token=${token}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        document.getElementById('nomeMotorista').textContent = data.nomeMotorista;
+                        document.getElementById('placaVeiculo').textContent = data.placa;
+                        document.getElementById('dataBloqueio').textContent = data.dataBloqueio;
+                        document.getElementById('motivoBloqueio').innerHTML = `⚠️ ${data.motivoBloqueio}`;
+                    } else {
+                        throw new Error('Erro ao carregar dados');
+                    }
+                } else {
+                    // Modo de teste local
+                    const data = mockData;
+                    document.getElementById('nomeMotorista').textContent = data.nomeMotorista;
+                    document.getElementById('placaVeiculo').textContent = data.placa;
+                    document.getElementById('dataBloqueio').textContent = data.dataBloqueio;
+                    document.getElementById('motivoBloqueio').innerHTML = `⚠️ ${data.motivoBloqueio}`;
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                document.getElementById('motivoBloqueio').innerHTML = 
+                    '❌ Erro ao carregar dados. Token pode ser inválido.';
+            }
+        }
+
+        // Processa o formulário
+        document.getElementById('autorizacaoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nomeAutorizador = document.getElementById('nomeAutorizador').value;
+            const cargoAutorizador = document.getElementById('cargoAutorizador').value;
+            const motivoAutorizacao = document.getElementById('motivoAutorizacao').value;
+            
+            // Validação
+            if (!nomeAutorizador || !motivoAutorizacao) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            // Mostra loading
+            document.getElementById('autorizacaoForm').style.display = 'none';
+            document.getElementById('loading').classList.add('active');
+            
+            try {
+                // Em produção, fazer chamada real à API
+                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    const response = await fetch(`${API_BASE_URL}/autorizar-excecao`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            token: token,
+                            nomeAutorizador: nomeAutorizador,
+                            cargoAutorizador: cargoAutorizador,
+                            motivoAutorizacao: motivoAutorizacao
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        document.getElementById('loading').classList.remove('active');
+                        document.getElementById('successMessage').classList.add('active');
+                        
+                        // Redireciona ou fecha após 3 segundos
+                        setTimeout(() => {
+                            window.close();
+                        }, 3000);
+                    } else {
+                        throw new Error('Erro na autorização');
+                    }
+                } else {
+                    // Simula sucesso para teste local
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    document.getElementById('loading').classList.remove('active');
+                    document.getElementById('successMessage').classList.add('active');
+                    
+                    setTimeout(() => {
+                        alert('Em modo de teste - a janela seria fechada aqui');
+                    }, 3000);
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('errorMessage').classList.add('active');
+                document.getElementById('autorizacaoForm').style.display = 'block';
+                
+                setTimeout(() => {
+                    document.getElementById('errorMessage').classList.remove('active');
+                }, 5000);
+            }
+        });
+
+        // Função para cancelar
+        function cancelar() {
+            if (confirm('Tem certeza que deseja cancelar? O veículo permanecerá bloqueado.')) {
+                window.close();
+            }
+        }
+
+        // Carrega dados ao iniciar
+        carregarDadosExcecao();
+    </script>
+</body>
+</html>
