@@ -403,8 +403,8 @@
                         // Preenche os campos com os nomes corretos
                         document.getElementById('nomeMotorista').textContent = data.nome_motorista || 'Não informado';
                         document.getElementById('placaVeiculo').textContent = data.placa || 'Não informado';
-                        document.getElementById('dataBloqueio').textContent = data.databloqueiio || 'Não informado';
-                        document.getElementById('motivoBloqueio').innerHTML = `⚠️ ${data.motivobloqueio || 'Não informado'}`;
+                        document.getElementById('dataBloqueio').textContent = data.databloqueio || data.databloqueiio || 'Não informado';
+                        document.getElementById('motivoBloqueio').innerHTML = `⚠️ ${data.motivobloqueio || data.descricao_bloqueio || 'Teste de bloqueio por excesso de condução'}`;
                         
                         // Remove mensagem de erro se tudo ok
                         const errorDiv = document.getElementById('motivoBloqueio');
