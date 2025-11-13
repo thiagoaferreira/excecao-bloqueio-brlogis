@@ -1,14 +1,19 @@
-# Use nginx para servir arquivos estáticos
 FROM nginx:alpine
 
-# Copiar o arquivo HTML para o diretório do nginx
-COPY index.html /usr/share/nginx/html/index.html
+# Remove a configuração padrão do nginx
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Copiar configuração customizada do nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copia apenas o HTML
+COPY index.html /usr/share/nginx/html/
 
-# Expor porta 80
+# Cria uma configuração simples inline
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
 EXPOSE 80
-
-# Comando para iniciar o nginx
-CMD ["nginx", "-g", "daemon off;"]
