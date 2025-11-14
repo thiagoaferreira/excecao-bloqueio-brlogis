@@ -390,11 +390,18 @@
         // Extrai o token da URL
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token') || window.location.pathname.split('/').pop();
-
-        // Detectar tipo de autorização pela URL
-        const urlPath = window.location.pathname;
-        const isPreAutorizacao = urlPath.includes('pre-autorizacao') || urlParams.get('pre') === 'true';
-
+        
+        // DEBUG - Adicione estas linhas temporariamente
+        console.log('URL completa:', window.location.href);
+        console.log('URL search:', window.location.search);
+        console.log('Parâmetro pre:', urlParams.get('pre'));
+        console.log('Token:', token);
+        
+        // Detectar tipo de autorização pela URL - CORRIGIDO
+        const isPreAutorizacao = urlParams.get('pre') === 'true' || window.location.search.includes('pre=true');
+        
+        console.log('É pré-autorização?', isPreAutorizacao);
+        
         // Configuração dinâmica baseada no tipo
         const pageConfig = isPreAutorizacao ? {
             title: "Pré-Autorização de Descanso",
