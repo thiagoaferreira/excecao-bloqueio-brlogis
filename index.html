@@ -460,67 +460,93 @@
             }
         }
 
+        // Link inválido: avisa o gestor e impede a autorização.
+        // Nunca exibir dados fictícios aqui — o gestor poderia autorizar
+        // o motorista errado achando que o link é válido.
+        function mostrarLinkInvalido(motivo) {
+            document.getElementById('nomeMotorista').textContent = '—';
+            document.getElementById('placaRow').classList.add('hidden');
+            const dataRow = document.getElementById('dataRow');
+            if (dataRow) dataRow.classList.add('hidden');
+            document.getElementById('motivoBloqueio').innerHTML = `⚠️ ${motivo}`;
+
+            // Esconde o formulário para não permitir autorizar sem dados
+            document.getElementById('autorizacaoForm').style.display = 'none';
+
+            const err = document.getElementById('errorMessage');
+            err.innerHTML = '❌ Este link não é mais válido — ele já foi utilizado ou expirou.<br>Use o link da mensagem mais recente do WhatsApp.';
+            err.classList.add('active');
+        }
+
         // Carrega dados da exceção/pré-autorização
         async function carregarDados() {
             configurarPagina(); // Configurar visual primeiro
-            
-            try {
-                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && token) {
-                    const response = await fetch(`${API_BASE_URL}/${pageConfig.dataEndpoint}?token=${token}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('Dados recebidos:', data);
-                        
-                        // Preencher dados comuns
-                        document.getElementById('nomeMotorista').textContent = data.nome_motorista || 'Não informado';
-                        
-                        if (isPreAutorizacao) {
-                            // Pré-autorização: mostrar data para liberação
-                            const dataAmanha = new Date();
-                            dataAmanha.setDate(dataAmanha.getDate() + 1);
-                            document.getElementById('dataBloqueio').textContent = dataAmanha.toLocaleDateString('pt-BR');
-                            
-                            const motivoDiv = document.getElementById('motivoBloqueio');
-                            motivoDiv.innerHTML = `⏰ ${pageConfig.alertText}`;
-                        } else {
-                            // Exceção normal: mostrar todos os dados
-                            document.getElementById('placaVeiculo').textContent = data.placa || 'Não informado';
-                            document.getElementById('dataBloqueio').textContent = data.databloqueio || data.databloqueiio || 'Não informado';
-                            
-                            const motivoDiv = document.getElementById('motivoBloqueio');
-                            motivoDiv.innerHTML = `⚠️ ${data.motivobloqueio || data.descricao_bloqueio || 'Bloqueio identificado'}`;
-                        }
-                    } else {
-                        throw new Error('Erro ao carregar dados');
-                    }
-                } else {
-                    // Modo teste local
-                    const data = mockData;
-                    document.getElementById('nomeMotorista').textContent = data.nomeMotorista;
-                    
-                    if (isPreAutorizacao) {
-                        document.getElementById('dataBloqueio').textContent = data.dataLiberacao;
-                        document.getElementById('motivoBloqueio').innerHTML = `⏰ ${pageConfig.alertText}`;
-                    } else {
-                        document.getElementById('placaVeiculo').textContent = data.placa;
-                        document.getElementById('dataBloqueio').textContent = data.dataBloqueio;
-                        document.getElementById('motivoBloqueio').innerHTML = `⚠️ ${data.motivoBloqueio}`;
-                    }
-                }
-            } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                // Usar dados mockados em caso de erro
+
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+            // Modo teste local: usa os dados mockados
+            if (isLocal) {
                 const data = mockData;
                 document.getElementById('nomeMotorista').textContent = data.nomeMotorista;
-                
                 if (isPreAutorizacao) {
-                    document.getElementById('dataBloqueio').textContent = data.dataLiberacao || 'Amanhã';
+                    document.getElementById('dataBloqueio').textContent = data.dataLiberacao;
                     document.getElementById('motivoBloqueio').innerHTML = `⏰ ${pageConfig.alertText}`;
                 } else {
-                    document.getElementById('placaVeiculo').textContent = data.placa || 'TST-1234';
+                    document.getElementById('placaVeiculo').textContent = data.placa;
                     document.getElementById('dataBloqueio').textContent = data.dataBloqueio;
                     document.getElementById('motivoBloqueio').innerHTML = `⚠️ ${data.motivoBloqueio}`;
                 }
+                return;
+            }
+
+            if (!token) {
+                mostrarLinkInvalido('Link sem identificação do motorista.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/${pageConfig.dataEndpoint}?token=${token}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                // O webhook responde 200 com corpo VAZIO quando o token já foi
+                // autorizado ou expirou (query filtra autorizado=false e valido_ate>now).
+                const texto = (await response.text()).trim();
+                if (!texto) {
+                    mostrarLinkInvalido('Link expirado ou já utilizado.');
+                    return;
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(texto);
+                } catch (e) {
+                    mostrarLinkInvalido('Link expirado ou já utilizado.');
+                    return;
+                }
+                if (Array.isArray(data)) data = data[0];
+
+                if (!data || !data.nome_motorista) {
+                    mostrarLinkInvalido('Link expirado ou já utilizado.');
+                    return;
+                }
+
+                console.log('Dados recebidos:', data);
+                document.getElementById('nomeMotorista').textContent = data.nome_motorista;
+
+                if (isPreAutorizacao) {
+                    // Data de liberação vem do banco (data_para_liberar)
+                    document.getElementById('dataBloqueio').textContent =
+                        data.dataliberacao || data.dataLiberacao || 'Não informado';
+                    document.getElementById('motivoBloqueio').innerHTML = `⏰ ${pageConfig.alertText}`;
+                } else {
+                    document.getElementById('placaVeiculo').textContent = data.placa || 'Não informado';
+                    document.getElementById('dataBloqueio').textContent = data.databloqueio || data.databloqueiio || 'Não informado';
+                    document.getElementById('motivoBloqueio').innerHTML =
+                        `⚠️ ${data.motivobloqueio || data.descricao_bloqueio || 'Bloqueio identificado'}`;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                mostrarLinkInvalido('Não foi possível carregar os dados deste link.');
             }
         }
 
